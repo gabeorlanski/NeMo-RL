@@ -3,23 +3,15 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
-[tool.setuptools]
-packages = ["nemo_rl",
-    "nemo_rl.algorithms",
-    "nemo_rl.converters",
-    "nemo_rl.data",
-    "nemo_rl.distributed",
-    "nemo_rl.environments",
-    "nemo_rl.evals",
-    "nemo_rl.experience",
-    "nemo_rl.metrics",
-    "nemo_rl.models",
-    "nemo_rl.utils"
-]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nemo_rl*"]
+exclude = ["3rdparty*", "examples*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "nemo_rl.__version__"}  # any module attribute compatible with ast.literal_eval
 readme = {file = "README.md", content-type = "text/markdown"}
+
 
 [project]
 name = "nemo-rl"
