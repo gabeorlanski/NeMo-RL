@@ -42,7 +42,6 @@ policy:
   precision: "bfloat16"
   fsdp_offload_enabled: false
   activation_checkpointing_enabled: false
-  refit_buffer_size_gb: 4 # used for refitting inference engine, the unit is GB
 
   dtensor_cfg:
     enabled: true
@@ -104,6 +103,7 @@ policy:
       async_engine: false # Only for internal testing, will be enabled by https://github.com/NVIDIA/NeMo-RL/issues/447.
       precision: ${policy.precision}
       tensor_parallel_size: 1
+      pipeline_parallel_size: 1
       gpu_memory_utilization: 0.6
       max_model_len: ${policy.max_total_sequence_length}
 
