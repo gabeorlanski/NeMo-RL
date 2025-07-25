@@ -21,7 +21,7 @@ from transformers import AutoModelForCausalLM
 from nemo_rl.algorithms.utils import get_tokenizer
 from nemo_rl.distributed.batched_data_dict import BatchedDataDict
 from nemo_rl.distributed.virtual_cluster import RayVirtualCluster
-from nemo_rl.models.policy.hf_policy import HfPolicy
+from nemo_rl.models.policy.lm_policy import Policy
 from nemo_rl.utils.native_checkpoint import (
     ModelState,
     OptimizerState,
@@ -42,8 +42,6 @@ simple_policy_config = {
     "logprob_batch_size": 1,
     "max_total_sequence_length": 1024,
     "precision": "float32",
-    "fsdp_offload_enabled": False,
-    "activation_checkpointing_enabled": False,
     "optimizer": {
         "name": "torch.optim.AdamW",
         "kwargs": {
@@ -54,19 +52,25 @@ simple_policy_config = {
         },
     },
     "dtensor_cfg": {
-        "enabled": False,
+        "enabled": True,
         "cpu_offload": False,
         "sequence_parallel": False,
         "activation_checkpointing": False,
         "tensor_parallel_size": 1,
+        "context_parallel_size": 1,
         "custom_parallel_plan": None,
     },
     "dynamic_batching": {
         "enabled": False,
     },
+    "sequence_packing": {
+        "enabled": False,
+    },
     "max_grad_norm": 1.0,
     "generation": {
+        "backend": "vllm",
         "temperature": 1.0,
+        "colocated": {"enabled": True},
     },
 }
 
@@ -115,7 +119,7 @@ def tokenizer():
 @pytest.fixture(scope="function")
 def policy(cluster, tokenizer):
     """Initialize the policy."""
-    policy = HfPolicy(
+    policy = Policy(
         cluster=cluster,
         tokenizer=tokenizer,
         config=simple_policy_config,
@@ -327,7 +331,7 @@ def test_convert_dcp_to_hf(policy, num_gpus):
             os.path.join(tmp_dir, "test_hf_and_dcp-hf-offline"),
             simple_policy_config["model_name"],
             # TODO: After the following PR gets merged:
-            # https://github.com/NVIDIA/NeMo-RL/pull/148/files
+            # https://github.com/NVIDIA-NeMo/RL/pull/148/files
             # tokenizer should be copied from policy/tokenizer/* instead of relying on the model name
             # We can expose a arg at the top level --tokenizer_path to plumb that through.
             # This is more stable than relying on the current NeMo-RL get_tokenizer() which can
